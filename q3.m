@@ -1,48 +1,60 @@
-A = 3;                     % Amplitude in Volts
-f = 50;                    % Frequency in Hz
-Fs = 10000;                % Sampling rate
-t = 0:1/Fs:0.05;           % Time vector
+clear all;
+close all;
+clc;
 
-x_t = A * sin(2 * pi * f * t);
+function [x,n] = stepseq(n0,n1,n2)
+%Generates x(n)=f(n-n0); n1 <= n <= n2
+n = [n1:n2];
+x = [(n-n0) >= 0];
+end
 
+function [xe,xo,m] = evenodd(x,n)
+%Real signal decomposition into even & odd parts
+m = -fliplr(n);
+m1 = min([m,n]); m2 = max([m,n]);
+m = m1:m2;
+nm = n(1)-m(1); n1 = 1:length(n);
+x1 = zeros(1,length(m)); x1(n1+nm) = x; x = x1;
+xe = 0.5*(x + fliplr(x)); xo = 0.5*(x - fliplr(x));
+end
 
-Fs_80 = 80;                    % Sampling rate of 80 Hz
-t_80 = 0:1/Fs_80:0.05;         % Time vector
+n0 = 0;
+n1 = 0;
+n2 = 10;
 
-x_80 = A * sin(2 * pi * f * t_80);
+[x1, n] = stepseq(n0, n1, 10); #f[n]
+[x2, ~] = stepseq(10, n1, 10); #f[n-10]
+x = x1 - x2; # x[n]
 
-grid on;
+[~, xo, m] = evenodd(x, n); #odd part
 
-Fs_100 = 100;                   % Sampling rate of 100 Hz
-t_100 = 0:1/Fs_100:0.05;
+[h, n] = stepseq(0, n1, n2);
+h = (0.9).^n .* h;
 
-x_100 = A * sin(2 * pi * f * t_100);
+y = conv(x, h); #convolution
 
-Fs_500 = 500;                    % Sampling rate of 500 Hz
-t_500 = 0:1/Fs_500:0.05;
-
-
-x_500 = A * sin(2 * pi * f * t_500);
-
+y_odd = conv(xo, h); #odd part convolution
+ny_odd = m(1) + n(1) : m(end) + n(end); #range
 
 
 figure;
-subplot(3,1,1);
-plot(t, x_t, 'b');              % Original signal in blue
-hold on;
-title('comparison of 2 quantized signals');
-stem(t_80, x_80, 'r');  % Sampled signal at 80 Hz in red
-
-subplot(3,1,2);
-stem(t_100, x_100, 'g');% Sampled signal at 100 Hz in green
-xlabel('Time (s)');
-ylabel('Amplitude (V)');
-title('100 Hz');
+subplot(3, 1, 1);
+stem(m, xo,'r');
+title('odd Part of Input Signal');
+xlabel('n');
+ylabel('Amplitude');
 grid on;
 
-subplot(3,1,3);
-stem(t_500, x_500, 'm');
-xlabel('Time (s)');
-ylabel('Amplitude (V)');
-title('500 Hz');
+subplot(3, 1, 2);
+stem(n, h, 'b');
+title('Impulse Response h[n]');
+xlabel('n');
+ylabel('Amplitude');
+grid on;
 
+subplot(3, 1, 3);
+stem(ny_odd, y_odd, 'g');
+title('Output Signal');
+xlabel('n');
+ylabel('Amplitude');
+grid on;
