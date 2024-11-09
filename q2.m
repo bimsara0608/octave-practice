@@ -1,35 +1,43 @@
-%Q2
+clear all;
+close all;
+clc;
 
+#---------------
 
-%Plot the given sinusoidal signal given signal in the range 0 ≤ t ≤ 0.1 s
+x = [1,2,3,4,5];
+h = [1,2,3,1];
 
-f = 1000;  %freaquency
-t = 0 : 1/f : 0.1; %time
-x_t = 1/3 * sin(2 * pi * 20 * t);
+y = conv(x,h);
 
-L = 7;
-x_min = min(x_t);
-x_max = max(x_t);
+x_n = length(x);
+h_n = length(h);
 
-q_step = (x_max - x_min) / (L - 1);
-x_quant = round((x_t - x_min) / q_step) * q_step + x_min;
+X = [x, zeros(1, x_n)];
 
-q_error = x_t - x_quant;
-mean_q_error = mean(abs(q_error ));
-fprintf('Mean Quantization Error: %f\n', mean_q_error);
+H = [h, zeros(1, h_n)];
 
-%{
+X_n = length(X);
+H_n = length(H);
+
+Y_length = X_n + H_n - 1;
+
+Y = zeros(1, Y_length);
+
+for i = 1:x_n
+    for j = 1:h_n
+        Y(i + j - 1) = Y(i + j - 1) + X(i) * H(j);
+    end
+end
+
 figure;
-plot(t, x_t, 'b');
-hold on;
-stairs(t, x_quant, 'r');
-xlabel('Time');
-ylabel('Amplitude x_t');
-title('Original and Quantized Signal');
-legend('Original Signal', 'Quantized Signal');
-grid on;%}
-
-
-
-
-
+subplot(2,1,1);
+stem(y,'r');
+title('Convolution Result of Sequences x and h');
+xlabel('Index');
+ylabel('Amplitude');
+subplot(2,1,2);
+stem(Y,'b');
+title('Convolution Result of Sequences X and H');
+xlabel('Index');
+ylabel('Amplitude');
+grid on;
